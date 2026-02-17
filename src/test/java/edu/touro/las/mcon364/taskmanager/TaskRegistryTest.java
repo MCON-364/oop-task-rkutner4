@@ -4,6 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -23,9 +25,9 @@ class TaskRegistryTest {
         Task task = new Task("Test task", Priority.HIGH);
         registry.add(task);
 
-        Task retrieved = registry.get("Test task");
-        assertNotNull(retrieved, "Added task should be retrievable");
-        assertEquals(task, retrieved, "Retrieved task should equal added task");
+        Optional<Task> retrieved = registry.get("Test task");
+        assertTrue(retrieved.isPresent(), "Added task should be retrievable");
+        assertEquals(task, retrieved.get(), "Retrieved task should equal added task");
     }
 
     @Test
@@ -37,15 +39,18 @@ class TaskRegistryTest {
         registry.add(task1);
         registry.add(task2);
 
-        Task retrieved = registry.get("Test task");
-        assertEquals(Priority.HIGH, retrieved.getPriority(), "Second task should replace first");
+        Optional<Task> retrieved = registry.get("Test task");
+        assertEquals(Priority.HIGH,
+                retrieved.orElseThrow().priority(),
+                "Second task should replace first");
     }
 
     @Test
-    @DisplayName("Getting non-existent task should return null")
+    @DisplayName("Getting non-existent task should return empty Optional")
     void testGetNonExistent() {
-        Task result = registry.get("Non-existent");
-        assertNull(result, "Non-existent task should return null (before Optional refactoring)");
+        Optional<Task> result = registry.get("Non-existent");
+        assertTrue(result.isEmpty(),
+                "Non-existent task should return empty Optional");
     }
 
     @Test
@@ -56,7 +61,8 @@ class TaskRegistryTest {
 
         registry.remove("Test task");
 
-        assertNull(registry.get("Test task"), "Removed task should not be retrievable");
+        assertTrue(registry.get("Test task").isEmpty(),
+                "Removed task should not be retrievable");
     }
 
     @Test
@@ -86,7 +92,7 @@ class TaskRegistryTest {
     @Test
     @DisplayName("getAll on empty registry should return empty map")
     void testGetAllEmpty() {
-        assertTrue(registry.getAll().isEmpty(), "Empty registry should return empty map");
+        assertTrue(registry.getAll().isEmpty(),
+                "Empty registry should return empty map");
     }
 }
-

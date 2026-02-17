@@ -1,5 +1,7 @@
 package edu.touro.las.mcon364.taskmanager;
 
+import java.util.Optional;
+
 public class DemoMain {
     private final TaskRegistry registry;
     private final TaskManager manager;
@@ -22,7 +24,7 @@ public class DemoMain {
         demonstrateUpdatingTask();
         demonstrateUpdatingNonExistentTask();
         demonstrateRemovingTask();
-        demonstrateNullReturn();
+        demonstrateOptionalReturn();
         displaySummary();
     }
 
@@ -40,25 +42,26 @@ public class DemoMain {
 
     private void demonstrateRetrievingTask() {
         System.out.println("\n2. Retrieving a specific task...");
-        Task retrieved = registry.get("Fix critical bug");
-        if (retrieved != null) {
-            System.out.println("   Found: " + retrieved.getName() + " (Priority: " + retrieved.getPriority() + ")");
-        } else {
-            System.out.println("   Task not found");
-        }
+        Task retrieved = registry.get("Fix critical bug").orElseThrow();
+        System.out.println("   Found: " + retrieved.name() + " (Priority: " + retrieved.priority() + ")");
     }
 
     private void demonstrateUpdatingTask() {
         System.out.println("\n3. Updating a task's priority...");
         System.out.println("   Changing 'Refactor code' from MEDIUM to HIGH");
         manager.run(new UpdateTaskCommand(registry, "Refactor code", Priority.HIGH));
-        displayAllTasks();
+
+        Task updated = registry.get("Refactor code").orElseThrow();
+        System.out.println("   Updated: " + updated.name() + " (Priority: " + updated.priority() + ")");
     }
 
     private void demonstrateUpdatingNonExistentTask() {
         System.out.println("\n4. Attempting to update non-existent task...");
-        manager.run(new UpdateTaskCommand(registry, "Non-existent task", Priority.HIGH));
-        System.out.println("   ^ This should throw a custom exception, not just print a warning!");
+        try {
+            manager.run(new UpdateTaskCommand(registry, "Non-existent task", Priority.HIGH));
+        } catch (TaskNotFoundException e) {
+            System.out.println("   Caught TaskNotFoundException: " + e.getMessage());
+        }
     }
 
     private void demonstrateRemovingTask() {
@@ -68,29 +71,29 @@ public class DemoMain {
         displayAllTasks();
     }
 
-    private void demonstrateNullReturn() {
+    private void demonstrateOptionalReturn() {
         System.out.println("\n6. Attempting to retrieve non-existent task...");
-        Task missing = registry.get("Non-existent task");
-        if (missing == null) {
-            System.out.println("   Returned null - this should be refactored to use Optional!");
+        Optional<Task> missing = registry.get("Non-existent task");
+        if (missing.isEmpty()) {
+            System.out.println("   Returned empty Optional - no task found");
         }
     }
 
     private void displaySummary() {
         System.out.println("\n=== Demo Complete ===");
-        System.out.println("\nNOTE: This code uses old-style Java patterns:");
-        System.out.println("  - Task is a verbose class (should be a record)");
-        System.out.println("  - Command interface is not sealed (allows unexpected implementations)");
-        System.out.println("  - TaskManager uses instanceof chains (should use pattern matching)");
-        System.out.println("  - Methods return null (should use Optional)");
-        System.out.println("  - No custom exceptions for domain errors");
-        System.out.println("  - UpdateTaskCommand silently fails instead of throwing exceptions");
+        System.out.println("\nNOTE: This code now uses modern Java patterns:");
+        System.out.println("  - Task is now a record");
+        System.out.println("  - Command interface is sealed");
+        System.out.println("  - TaskManager uses pattern-matching switch");
+        System.out.println("  - Methods return Optional instead of null");
+        System.out.println("  - Custom exception (TaskNotFoundException) is thrown for domain errors");
+        System.out.println("  - UpdateTaskCommand no longer silently fails");
     }
 
     private void displayAllTasks() {
         System.out.println("\n   Current tasks in registry:");
         registry.getAll().forEach((name, task) ->
-            System.out.println("     - " + name + " (Priority: " + task.getPriority() + ")")
+                System.out.println("     - " + name + " (Priority: " + task.priority() + ")")
         );
     }
 }
