@@ -11,7 +11,7 @@ public class TaskRegistry {
         tasks.put(task.name(), task);
     }
 
-    //change to optional
+    //changed to optional
     public Optional<Task> get(String name) {
         return Optional.ofNullable(tasks.get(name));
     }
