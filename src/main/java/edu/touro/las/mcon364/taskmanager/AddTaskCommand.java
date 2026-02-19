@@ -1,6 +1,7 @@
 package edu.touro.las.mcon364.taskmanager;
 
-public class AddTaskCommand implements Command {
+//made this final
+public final class AddTaskCommand implements Command {
     private final TaskRegistry registry;
     private final Task task;
 
